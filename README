@@ -1,0 +1,70 @@
+=== HiSlip Library (libhislip) ===
+
+
+    *** WARNING: Work in progress (ALPHA) ***
+
+
+1. Introduction
+
+    The HiSlip library (libhislip) is an open source library for GNU/Linux
+    systems which offers a client and server API for communicating with clients
+    and servers that speak the HiSlip protocol.
+
+    The implemention supports sending/receiving messages on sychronous and/or
+    asynchronous HiSlip communication channels.
+
+    The library implements the HiSlip protocol v1.0 as described here:
+    http://ivifoundation.org/downloads/Protocol%20Specifications/IVI-6.1_HiSLIP-1.1-2011-02-24.pdf
+    
+
+2. Installation
+
+    Install steps:
+
+    $ ./configure
+    $ make
+    $ make install
+
+
+3. The libhislip API
+
+    The API includes the following functions:
+
+    *To be done*
+
+
+4. API usage
+
+    The following are simple code examples demonstrating how to use the
+    libhislip API.
+
+    Server example:
+
+    *To be done*
+
+    Client example:
+
+    *To be done*
+
+
+5. Contributing
+
+    libhislip is open source. If you want to help out with the project please
+    join in. Any contributions (bug reports, code, doc, ideas, etc.) are
+    welcome.
+
+    Please use the github issue tracker and pull request features.
+
+
+6. Website
+
+    Visit https://lxi.github.io
+
+
+7. License
+
+    The libhislip code is covered by BSD-3, commonly known as the 3-clause (or
+    "modified") BSD license
+
+    For license details please see the LICENSE file.
+
