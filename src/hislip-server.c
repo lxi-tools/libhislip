@@ -43,7 +43,7 @@
 #include <hislip/common.h>
 #include "tcp.h"
 
-static void hs_process(int socket)
+static void hs_process(int sd)
 {
     // Blocking read on socket until data
 
@@ -55,11 +55,11 @@ static void hs_process(int socket)
 
 }
 
-static void connection_callback(int socket)
+static void connection_callback(int sd)
 {
-	printf("client_socket = %d\n", socket);
+	printf("client_socket = %d\n", sd);
 
-    hs_process(socket);
+    hs_process(sd);
 }
 
 int hs_server_run(hs_server_t *server)

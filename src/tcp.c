@@ -44,9 +44,8 @@
 
 typedef struct
 {
-    int socket;
-    void (*connection_callback)(int socket);
-
+    int sd;
+    void (*connection_callback)(int sd);
 } connection_data_t;
 
 static void print_data(void *data, int length)
@@ -175,7 +174,7 @@ static void *connection_thread(void *arg)
 {
     // Call connection callback
     connection_data_t *connection_data = arg;
-    connection_data->connection_callback(connection_data->socket);
+    connection_data->connection_callback(connection_data->sd);
 }
 
 /*
@@ -187,7 +186,7 @@ static void *connection_thread(void *arg)
  *
  */
 
-int tcp_server_start(int port, int n, void (*connection_callback)(int socket))
+int tcp_server_start(int port, int n, void (*connection_callback)(int sd))
 {
     int server_socket;
     int status, length = sizeof(int);
@@ -226,9 +225,10 @@ int tcp_server_start(int port, int n, void (*connection_callback)(int socket))
 
     printf("Listening for incoming client connections on port %d\n", port);
 
+    // Enter service loop
     while (1)
     {
-		pthread_t thread;
+        pthread_t thread;
         int client_socket;
 
         // Wait for and accept incoming connection
@@ -243,14 +243,14 @@ int tcp_server_start(int port, int n, void (*connection_callback)(int socket))
         printf("Incoming connection from client (%s)\n", inet_ntoa(client_address.sin_addr));
 
         // Prepare connection data
-        connection_data.socket = client_socket;
-        connection_data.connection_callback = connection_callback;    
+        connection_data.sd = client_socket;
+        connection_data.connection_callback = connection_callback;
 
         // Create server thread
-	    pthread_create(&thread, NULL, connection_thread, &connection_data);
+        pthread_create(&thread, NULL, connection_thread, &connection_data);
 
         // Make sure server thread does its own cleanup upon termination
-    	pthread_detach(thread);
+        pthread_detach(thread);
     }
 
     return 0;

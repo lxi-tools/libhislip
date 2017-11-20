@@ -36,7 +36,7 @@ int tcp_connect(int *sd, char *address, int port, int timeout);
 int tcp_disconnect(int sd);
 
 // Server API
-int tcp_server_start(int port, int n, void (*connection_callback)(int socket));
+int tcp_server_start(int port, int n, void (*connection_callback)(int sd));
 int tcp_server_stop(void);
 
 // Common API
