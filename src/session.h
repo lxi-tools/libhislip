@@ -33,21 +33,23 @@
 
 #include <stdbool.h>
 #include <pthread.h>
+#include <stdint.h>
 
 #define MAX_SESSIONS 50
 
-struct session_t
+typedef struct
 {
     bool allocated;
 
     int socket_sync;
     int socket_async;
+    uint16_t SessionID;
 
     // Session data
     void *data;
-};
+} session_t;
 
-extern struct session_t session[MAX_SESSIONS];
+extern session_t session[MAX_SESSIONS];
 extern pthread_mutex_t session_mutex;
 
 int session_allocate(void);

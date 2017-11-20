@@ -70,6 +70,8 @@ hs_client_t hs_connect(char *address, int port, char *subaddress, int timeout)
 
     // Wait for InitializeResponse message
 
+    // session[i].SessionID = ...
+
     // Return client session handle
     return i;
 

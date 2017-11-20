@@ -33,7 +33,7 @@
 #include "session.h"
 #include "error.h"
 
-struct session_t session[MAX_SESSIONS] = {};
+session_t session[MAX_SESSIONS] = {};
 pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int session_allocate(void)

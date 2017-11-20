@@ -38,13 +38,6 @@
 
 #define HISLIP_PORT 4880
 
-typedef struct
-{
-    int AsyncChannel;
-    int SyncChannel;
-    int ID;
-} session_t;
-
 typedef enum
 {
     Initialize,
