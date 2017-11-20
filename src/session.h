@@ -28,74 +28,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef SESSION_H
+#define SESSION_H
+
 #include <stdbool.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
 #include <pthread.h>
-#include <hislip/client.h>
-#include <hislip/common.h>
-#include "tcp.h"
-#include "session.h"
-#include "error.h"
 
-hs_client_t hs_connect(char *address, int port, char *subaddress, int timeout)
+#define MAX_SESSIONS 50
+
+struct session_t
 {
-    int sd, i;
+    bool allocated;
 
-    // Allocate new session
-    i = session_allocate();
-    if (i < 0)
-    {
-        error_printf("Could not allocate new session!\n");
-        goto error_session;
-    }
+    int socket_sync;
+    int socket_async;
 
-    // Create TCP connection
-    if (tcp_connect(&sd, address, port, timeout) != 0)
-        goto error_connect;
+    // Session data
+    void *data;
+};
 
-    // Save sync channel socket
-    session[i].socket_sync = sd;
+extern struct session_t session[MAX_SESSIONS];
+extern pthread_mutex_t session_mutex;
 
-    // Create Initialize message
+int session_allocate(void);
+int session_free(int i);
 
-    // send Initialize message
-
-    // Wait for InitializeResponse message
-
-    // Return client session handle
-    return i;
-
-error_connect:
-    session_free(i);
-error_session:
-    return -1;
-}
-
-int hs_disconnect(hs_client_t client)
-{
-    tcp_disconnect(session[client].socket_sync);
-
-    session_free(client);
-
-    return 0;
-}
-
-
-int hs_send_receive_sync(hs_client_t client, void *message, int *length, int timeout)
-{
-
-}
-
-int hs_send_receive_async(hs_client_t client, void *message, int length, int timeout,
-        void (*receive_callback)(void *message, int length))
-{
-
-}
+#endif

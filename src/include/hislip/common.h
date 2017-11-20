@@ -75,7 +75,7 @@ typedef enum
     AsyncLockInfoResponse
 } msg_type_t;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     uint16_t prologue;
     uint8_t msg_type;

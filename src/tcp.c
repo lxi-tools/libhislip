@@ -40,6 +40,7 @@
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
+#include "error.h"
 
 typedef struct
 {
@@ -75,7 +76,7 @@ int tcp_connect(int *sd, char *address, int port, int timeout)
     // Create a TCP/IP stream socket
     if ((*sd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
-        printf("Error: socket() call failed\n");
+        error_printf("socket() call failed\n");
         return -1;
     }
 
@@ -92,7 +93,7 @@ int tcp_connect(int *sd, char *address, int port, int timeout)
 
         if (host == (struct hostent *) NULL)
         {
-            printf("Error: Host not found\n");
+            error_printf("Host not found\n");
             close(*sd);
             return -1;
         }
@@ -103,7 +104,7 @@ int tcp_connect(int *sd, char *address, int port, int timeout)
     // Establish connection to server
     if (connect(*sd, (struct sockaddr *) &server_address, sizeof(server_address)) < 0)
     {
-        printf("Error: connect() call failed\n");
+        error_printf("connect() call failed\n");
         close(*sd);
         return -1;
     }
@@ -133,7 +134,7 @@ int tcp_write(int sd, void *buffer, int length, int timeout)
     else if (status)
         return write(sd, buffer, length); // TODO: Write until all done
     else
-        printf("Error: Timeout\n");
+        error_printf("Timeout\n");
 
     return -1;
 }
@@ -160,18 +161,17 @@ int tcp_read(int sd, void *buffer, int length, int timeout)
     else if (status)
         return read(sd, buffer, length); // TODO: Read until all done
     else
-        printf("Error: Timeout\n");
+        error_printf("Timeout\n");
 
     return -1;
 }
 
 int tcp_disconnect(int sd)
 {
-    close(sd);
-    return 0;
+    return close(sd);
 }
 
-static void *server_thread(void *arg)
+static void *connection_thread(void *arg)
 {
     // Call connection callback
     connection_data_t *connection_data = arg;
@@ -198,8 +198,8 @@ int tcp_server_start(int port, int n, void (*connection_callback)(int socket))
     // Create a reliable stream socket using TCP/IP
     if ((server_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
-        perror("Error: socket() call failed");
-        exit (EXIT_FAILURE);
+        error_printf("socket() call failed (%s)\n", strerror(errno));
+        exit(EXIT_FAILURE);
     }
 
     // Initialize server address structure
@@ -211,7 +211,7 @@ int tcp_server_start(int port, int n, void (*connection_callback)(int socket))
     // Assign server address to socket
     if ((status = bind(server_socket, (struct sockaddr *) &server_address, sizeof(server_address))) < 0)
     {
-        perror("Error: bind() call failed");
+        error_printf("bind() call failed (%s)\n", strerror(errno));
         close(server_socket);
         exit(EXIT_FAILURE);
     }
@@ -219,7 +219,7 @@ int tcp_server_start(int port, int n, void (*connection_callback)(int socket))
     // Allow up to N clients to be connected simultaneously
     if((status = listen(server_socket, n)) < 0)
     {
-        perror("Error: listen() call failed");
+        error_printf("listen() call failed (%s)\n", strerror(errno));
         close(server_socket);
         exit (EXIT_FAILURE);
     }
@@ -235,7 +235,7 @@ int tcp_server_start(int port, int n, void (*connection_callback)(int socket))
         socklen_t sin_size = sizeof(struct sockaddr_in);
         if ((client_socket = accept(server_socket, (struct sockaddr *) &client_address, (socklen_t *) &sin_size)) < 0)
         {
-            perror("Error: accept() call failed");
+            error_printf("accept() call failed (%s)\n", strerror(errno));
             close(server_socket);
             exit (EXIT_FAILURE);
         }
@@ -247,16 +247,11 @@ int tcp_server_start(int port, int n, void (*connection_callback)(int socket))
         connection_data.connection_callback = connection_callback;    
 
         // Create server thread
-	    pthread_create(&thread, NULL, server_thread, &connection_data);
+	    pthread_create(&thread, NULL, connection_thread, &connection_data);
 
         // Make sure server thread does its own cleanup upon termination
     	pthread_detach(thread);
     }
 
     return 0;
-}
-
-int tcp_server_stop(void)
-{
-    // TBD
 }

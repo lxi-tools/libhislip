@@ -34,7 +34,6 @@
 typedef struct
 {
     int (*tcp_start)(int port, int n, void (*connection_callback)(int socket));
-    int (*tcp_stop)(void);
     int (*tcp_read)(int socket, void *buffer, int length, int timeout);
     int (*tcp_write)(int socket, void *buffer, int length, int timeout);
     int (*tcp_disconnect)(int socket);

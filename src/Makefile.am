@@ -10,7 +10,11 @@ libhislip_la_SOURCES = include/hislip/client.h \
                        include/hislip/common.h \
                        hislip-client.c \
                        hislip-server.c \
-                       tcp.c
+                       tcp.c \
+                       tcp.h \
+                       session.c \
+                       session.h \
+                       error.h
 
 libhislip_la_CFLAGS = -I$(top_srcdir)/src/include
 

@@ -78,7 +78,6 @@ int hs_server_init(hs_server_t *server, int port, int connections_max)
 
     // Configure TCP callbacks
     server->tcp_start = tcp_server_start;
-    server->tcp_stop = tcp_server_stop;
     server->tcp_read = tcp_read;
     server->tcp_write = tcp_write;
     server->tcp_disconnect = tcp_disconnect;
