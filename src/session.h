@@ -34,8 +34,9 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <hislip/server.h>
 
-#define MAX_SESSIONS 50
+#define MAX_SESSIONS 256
 
 typedef struct
 {
@@ -45,14 +46,16 @@ typedef struct
     int socket_async;
     uint16_t SessionID;
 
+    hs_subaddress_data_t *subaddress_data;
+
     // Session data
     void *data;
 } session_t;
 
 extern session_t session[MAX_SESSIONS];
-extern pthread_mutex_t session_mutex;
+//extern pthread_mutex_t session_mutex;
 
-int session_allocate(void);
+int session_new(void);
 int session_free(int i);
 
 #endif

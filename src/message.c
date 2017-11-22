@@ -28,9 +28,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COMMON_H
-#define COMMON_H
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include "message.h"
+#include "error.h"
 
-#define HISLIP_PORT 4880
+int msg_header_verify(msg_header_t *header)
+{
+    // Verify message prefix
+    if (header->prologue != MSG_HEADER_PROLOGUE)
+    {
+        error_printf("Received invalid message header (invalid prologue)\n");
+        return 1;
+    }
 
-#endif
+    return 0;
+}

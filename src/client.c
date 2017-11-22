@@ -49,8 +49,8 @@ hs_client_t hs_connect(char *address, int port, char *subaddress, int timeout)
 {
     int sd, i;
 
-    // Allocate new session
-    i = session_allocate();
+    // Create new session
+    i = session_new();
     if (i < 0)
     {
         error_printf("Could not allocate new session!\n");
@@ -93,11 +93,11 @@ int hs_disconnect(hs_client_t client)
 
 int hs_send_receive_sync(hs_client_t client, void *message, int *length, int timeout)
 {
-
+    return 0;
 }
 
 int hs_send_receive_async(hs_client_t client, void *message, int length, int timeout,
         void (*receive_callback)(void *message, int length))
 {
-
+    return 0;
 }

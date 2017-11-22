@@ -45,7 +45,8 @@
 typedef struct
 {
     int sd;
-    void (*connection_callback)(int sd);
+    void (*connection_callback)(int sd, void *data);
+    void *data;
 } connection_data_t;
 
 static void print_data(void *data, int length)
@@ -131,7 +132,7 @@ int tcp_write(int sd, void *buffer, int length, int timeout)
     if (status == -1)
         return -1;
     else if (status)
-        return write(sd, buffer, length); // TODO: Write until all done
+        return write(sd, buffer, length); // TODO: Write until exact length done
     else
         error_printf("Timeout\n");
 
@@ -158,7 +159,7 @@ int tcp_read(int sd, void *buffer, int length, int timeout)
     if (status == -1)
         return -1;
     else if (status)
-        return read(sd, buffer, length); // TODO: Read until all done
+        return read(sd, buffer, length); // TODO: Read until exact length done
     else
         error_printf("Timeout\n");
 
@@ -174,7 +175,9 @@ static void *connection_thread(void *arg)
 {
     // Call connection callback
     connection_data_t *connection_data = arg;
-    connection_data->connection_callback(connection_data->sd);
+    connection_data->connection_callback(connection_data->sd, connection_data->data);
+
+    return 0;
 }
 
 /*
@@ -186,10 +189,10 @@ static void *connection_thread(void *arg)
  *
  */
 
-int tcp_server_start(int port, int n, void (*connection_callback)(int sd))
+int tcp_server_start(int port, int n, void (*connection_callback)(int sd, void *data), void *data)
 {
     int server_socket;
-    int status, length = sizeof(int);
+    int status;
     struct sockaddr_in server_address;
     struct sockaddr_in client_address;
     connection_data_t connection_data;
@@ -244,9 +247,10 @@ int tcp_server_start(int port, int n, void (*connection_callback)(int sd))
 
         // Prepare connection data
         connection_data.sd = client_socket;
+        connection_data.data = data;
         connection_data.connection_callback = connection_callback;
 
-        // Create server thread
+        // Create connection thread
         pthread_create(&thread, NULL, connection_thread, &connection_data);
 
         // Make sure server thread does its own cleanup upon termination

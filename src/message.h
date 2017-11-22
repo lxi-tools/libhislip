@@ -28,57 +28,56 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#ifndef MESSAGE_H
+#define MESSAGE_H
+
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
-#include <unistd.h>
-#include <errno.h>
 #include <string.h>
-#include <pthread.h>
-#include <hislip/server.h>
-#include <hislip/common.h>
-#include "tcp.h"
 
-static void hs_process(int sd)
+#define MSG_HEADER_SIZE 16
+#define MSG_HEADER_PROLOGUE 0x4854 // "HS"
+
+typedef struct __attribute__((__packed__))
 {
-    // Blocking read on socket until data
+    uint16_t prologue;
+    uint8_t type;
+    uint8_t control_code;
+    uint32_t parameter;
+    uint64_t payload_length;
+} msg_header_t;
 
-    // Parse incoming request data (parse header)
-
-    // Process request (switch on msg type)
-
-    // Send response
-
-}
-
-static void connection_callback(int sd)
+typedef enum
 {
-	printf("client_socket = %d\n", sd);
+    Initialize,
+    InitializeResponse,
+    FatalError,
+    Error,
+    AsyncLock,
+    AsyncLockResponse,
+    Data,
+    DataEnd,
+    DeviceClearComplete,
+    DeviceClearAcknowledge,
+    AsyncRemoteLocalControl,
+    AsyncRemoteLocalResponse,
+    Trigger,
+    Interrupted,
+    AsyncInterrupted,
+    AsyncMaximumMessageSize,
+    AsyncMaximumMessageSizeResponse,
+    AsyncInitialize,
+    AsyncInitializeResponse,
+    AsyncDeviceClear,
+    AsyncServiceRequest,
+    AsyncStatusQuery,
+    AsyncStatusResponse,
+    AsyncDeviceClearAcknowledge,
+    AsyncLockInfo,
+    AsyncLockInfoResponse
+} msg_type_t;
 
-    hs_process(sd);
-}
+int msg_header_verify(msg_header_t *header);
 
-int hs_server_run(hs_server_t *server)
-{
-    // Start server
-    server->tcp_start(server->port, server->connections_max, connection_callback);
-}
-
-// hs_server_register_subaddress(hs_server_t *server, char *subaddress, callbacks);
-
-int hs_server_init(hs_server_t *server, int port, int connections_max)
-{
-    // Configure options
-    server->connections_max = connections_max;
-    server->port = port;
-
-    // Configure TCP callbacks
-    server->tcp_start = tcp_server_start;
-    server->tcp_read = tcp_read;
-    server->tcp_write = tcp_write;
-    server->tcp_disconnect = tcp_disconnect;
-}
+#endif

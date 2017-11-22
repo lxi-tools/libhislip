@@ -29,14 +29,16 @@
  */
 
 #include <stdio.h>
+#include <stdint.h>
 #include <pthread.h>
 #include "session.h"
 #include "error.h"
 
+static uint16_t session_id = 0;
+static pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
 session_t session[MAX_SESSIONS] = {};
-pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int session_allocate(void)
+int session_new(void)
 {
     bool session_available = false;
     int i;
@@ -50,6 +52,7 @@ int session_allocate(void)
         {
             // Claim session
             session[i].allocated = true;
+            session[i].SessionID = session_id++;
             session_available = true;
             break;
         }
