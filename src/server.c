@@ -46,7 +46,6 @@
 #include "error.h"
 #include "session.h"
 
-#define SERVER_PAYLOAD_MAX 0x500000 // 5 MB
 #define SERVER_PROTOCOL_VERSION 0x100 // Major = 1, Minor = 0
 
 static int server_subaddress_connect(hs_server_t *server, char *subaddress)
@@ -55,10 +54,11 @@ static int server_subaddress_connect(hs_server_t *server, char *subaddress)
     return 0;
 }
 
-static void hs_process(int sd, hs_server_t *server)
+static void hs_process(int socket, hs_server_t *server)
 {
     msg_header_t msg_header;
     int bytes_received, bytes_sent, i;
+    char *subaddress;
     void *payload;
 
     // Enter message processing loop
@@ -75,14 +75,14 @@ static void hs_process(int sd, hs_server_t *server)
          */
 
         // Receive message header (blocking until data available)
-        if ((bytes_received = server->tcp_read(sd, &msg_header, MSG_HEADER_SIZE, 0)) == 0)
+        if ((bytes_received = server->tcp_read(socket, &msg_header, MSG_HEADER_SIZE, 0)) == 0)
         {
             printf("Client closed connection\n");
-            server->tcp_close(sd);
+            server->tcp_close(socket);
             return;
         }
 
-        // Skip until we have enough bytes representing a message header (non-progressive)
+        // Skip until we have enough bytes representing a message header
         if (bytes_received < MSG_HEADER_SIZE)
             continue;
 
@@ -106,29 +106,27 @@ static void hs_process(int sd, hs_server_t *server)
                 continue;
             }
 
-            if ((bytes_received = server->tcp_read(sd, payload, msg_header.payload_length, 0)) == 0)
+            if ((bytes_received = server->tcp_read(socket, payload, msg_header.payload_length, 0)) == 0)
             {
                 printf("Client closed connection\n");
-                server->tcp_close(sd);
+                server->tcp_close(socket);
                 return;
             }
         }
 
         switch (msg_header.type)
         {
-            char *subaddress;
-
             case Initialize:
                 // Match subaddress to registered subaddress(es)
-                //  If no match send FatalError
                 subaddress = payload;
                 if (server_subaddress_connect(server, subaddress) == -1) // Payload is subaddress
                 {
                     error_printf("Unable to connect subaddress\n");
+                    // TODO: Respond FatalError
                     continue;
                 }
 
-                // Decode parameters:
+                // Decode parameter field:
                 //  Client protocol version (upper)
                 //  Client vendor id (lower)
                 uint16_t *value = (uint16_t *) &msg_header.parameter;
@@ -139,16 +137,16 @@ static void hs_process(int sd, hs_server_t *server)
                 if (client_protocol_version != SERVER_PROTOCOL_VERSION)
                 {
                     error_printf("Unsupported protocol version\n");
+                    server->tcp_close(socket);
                     return;
                 }
-
 
                 // Create new session
                 i = session_new();
                 if (i < 0)
                 {
                     error_printf("Could not allocate new session!\n");
-                    // Disconnect
+                    server->tcp_close(socket);
                     return;
                 }
 
@@ -158,7 +156,24 @@ static void hs_process(int sd, hs_server_t *server)
                 //  Server protocol version
 
                 break;
+
+            case InitializeResponse:
+                break;
             case AsyncInitialize:
+                break;
+            case AsyncInitializeResponse:
+                break;
+            case Data:
+                break;
+            case DataEnd:
+                break;
+            case AsyncMaximumMessageSize:
+                break;
+            case AsyncMaximumMessageSizeResponse:
+                break;
+            case Error:
+                break;
+            case FatalError:
                 break;
             default:
                 break;
@@ -166,28 +181,27 @@ static void hs_process(int sd, hs_server_t *server)
     }
 }
 
-static void connection_callback(int sd, void *data)
+static void connection_callback(int socket, void *data)
 {
-    printf("client_socket = %d\n", sd);
+    printf("client_socket = %d\n", socket);
 
-    hs_process(sd, data);
+    hs_process(socket, data);
 }
 
 int hs_server_run(hs_server_t *server)
 {
     // Start server
-    server->tcp_start(server->port, server->connections_max, connection_callback, server);
+    server->tcp_start(server->config->port, server->config->connections_max, connection_callback, server);
 
     return 0;
 }
 
 // hs_server_register_subaddress(hs_server_t *server, char *subaddress, callbacks);
 
-int hs_server_init(hs_server_t *server, int port, int connections_max)
+int hs_server_init(hs_server_t *server, hs_server_config_t *config)
 {
-    // Configure options
-    server->connections_max = connections_max;
-    server->port = port;
+    // Set configuration
+    server->config = config;
 
     // Configure TCP callbacks
     server->tcp_start = tcp_server_start;

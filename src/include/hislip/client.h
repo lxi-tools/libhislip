@@ -37,6 +37,7 @@ typedef int hs_client_t;
 hs_client_t hs_connect(char *address, int port, char *subaddress, int timeout);
 int hs_send_receive_sync(hs_client_t client, void *message, int *length, int timeout);
 int hs_send_receive_async(hs_client_t client, void *message, int length, int timeout, void (*receive_callback)(void *message, int length));
+int hs_send_response(int message_id, void *message, int length);
 int hs_disconnect(hs_client_t client);
 
 #endif

@@ -47,20 +47,29 @@ typedef struct
 
 typedef struct
 {
-    int (*tcp_start)(int port, int n, void (*connection_callback)(int sd, void *data), void *data);
-    int (*tcp_read)(int sd, void *buffer, int length, int timeout);
-    int (*tcp_write)(int sd, void *buffer, int length, int timeout);
-    int (*tcp_close)(int sd);
-    
-    int connections_max;
     int port;
+    int connections_max;
+    int worker_threads_max;
+    int worker_queue_depth_max;
+    int payload_size_max;
+    int message_timeout;
 
+} hs_server_config_t;
+
+typedef struct
+{
+    int (*tcp_start)(int port, int n, void (*connection_callback)(int socket, void *data), void *data);
+    int (*tcp_read)(int socket, void *buffer, int length, int timeout);
+    int (*tcp_write)(int socket, void *buffer, int length, int timeout);
+    int (*tcp_close)(int socket);
+
+    hs_server_config_t *config;
     hs_subaddress_data_t subaddress_data[20];
 
 } hs_server_t;
 
 /* Server API */
-int hs_server_init(hs_server_t *server, int port, int connections_max);
+int hs_server_init(hs_server_t *server, hs_server_config_t *config);
 int hs_server_register_subaddress(hs_server_t *server, char *subaddress, hs_subaddress_callbacks_t *callbacks);
 int hs_server_run(hs_server_t *server);
 

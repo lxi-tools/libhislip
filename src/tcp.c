@@ -253,7 +253,7 @@ int tcp_server_start(int port, int n, void (*connection_callback)(int sd, void *
         // Create connection thread
         pthread_create(&thread, NULL, connection_thread, &connection_data);
 
-        // Make sure server thread does its own cleanup upon termination
+        // Make sure connection thread does its own cleanup upon termination
         pthread_detach(thread);
     }
 
