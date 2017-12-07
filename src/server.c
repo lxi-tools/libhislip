@@ -228,6 +228,19 @@ int hs_server_run(hs_server_t *server)
     return 0;
 }
 
+int hs_server_config_init(hs_server_config_t *config)
+{
+    // Initialize server configuration with default values
+    config->port = HISLIP_PORT;
+    config->connections_max = 1;
+    config->worker_threads_max = 1;
+    config->worker_queue_depth_max = 10;
+    config->payload_size_max = 0x400000; // 4 MB
+    config->message_timeout = 5000; // 5 seconds
+
+    return 0;
+}
+
 int hs_server_init(hs_server_t *server, hs_server_config_t *config)
 {
     // Intialize subaddress list

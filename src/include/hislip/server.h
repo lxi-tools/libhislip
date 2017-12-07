@@ -72,6 +72,7 @@ typedef struct
 } hs_server_t;
 
 /* Server API */
+int hs_server_config_init(hs_server_config_t *config);
 int hs_server_init(hs_server_t *server, hs_server_config_t *config);
 int hs_server_register_subaddress(hs_server_t *server, char *subaddress, hs_subaddress_callbacks_t *callbacks);
 int hs_server_run(hs_server_t *server);
