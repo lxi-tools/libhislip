@@ -30,6 +30,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/queue.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
@@ -48,10 +49,29 @@
 
 #define SERVER_PROTOCOL_VERSION 0x100 // Major = 1, Minor = 0
 
-static int server_subaddress_connect(hs_server_t *server, char *subaddress)
+typedef LIST_HEAD(subaddress_head_t, hs_subaddress_data_t) subaddress_head_t;
+subaddress_head_t *subaddress_head;
+
+static int server_subaddress_link(hs_server_t *server, char *subaddress, hs_subaddress_data_t *subaddress_data)
 {
-    // Connect session to subaddress
-    return 0;
+    bool match_found = false;
+    hs_subaddress_data_t *sd;
+
+    // Lookup subaddress in list of registered subaddresses
+    LIST_FOREACH(sd, subaddress_head, entries)
+    {
+        if (strcmp(sd->subaddress, subaddress) == 0)
+        {
+            match_found = true;
+            subaddress_data = sd;
+            printf("found subaddress\n");
+            break;
+        }
+    }
+
+    // Link connection session to subaddress
+
+    return match_found;
 }
 
 static void hs_process(int socket, hs_server_t *server)
@@ -59,7 +79,7 @@ static void hs_process(int socket, hs_server_t *server)
     msg_header_t msg_header;
     int bytes_received, bytes_sent, i;
     char *subaddress;
-    void *payload;
+    void *payload = NULL;
 
     // Enter message processing loop
     while (1)
@@ -99,6 +119,14 @@ static void hs_process(int socket, hs_server_t *server)
         // Receive any payload
         if (msg_header.payload_length > 0)
         {
+            // Check payload size
+            if (msg_header.payload_length > server->config->payload_size_max)
+            {
+                error_printf("Maximum payload size exceeded\n");
+                continue;
+            }
+
+            // Allocate payload receive buffer
             payload = malloc(msg_header.payload_length);
             if (payload == NULL)
             {
@@ -106,6 +134,7 @@ static void hs_process(int socket, hs_server_t *server)
                 continue;
             }
 
+            // Read payload
             if ((bytes_received = server->tcp_read(socket, payload, msg_header.payload_length, 0)) == 0)
             {
                 printf("Client closed connection\n");
@@ -114,40 +143,43 @@ static void hs_process(int socket, hs_server_t *server)
             }
         }
 
+        // Perform action depending on message type
         switch (msg_header.type)
         {
             case Initialize:
-                // Match subaddress to registered subaddress(es)
-                subaddress = payload;
-                if (server_subaddress_connect(server, subaddress) == -1) // Payload is subaddress
                 {
-                    error_printf("Unable to connect subaddress\n");
-                    // TODO: Respond FatalError
-                    continue;
+                    // Decode parameter field:
+                    //  Client protocol version (upper)
+                    //  Client vendor id (lower)
+                    uint16_t *value = (uint16_t *) &msg_header.parameter;
+                    uint16_t client_vendor_id = *value;
+                    uint16_t client_protocol_version = *(value+1);
+
+                    // Check if HiSlip protocol version is supported
+                    if (client_protocol_version != SERVER_PROTOCOL_VERSION)
+                    {
+                        error_printf("Unsupported protocol version\n");
+                        server->tcp_close(socket);
+                        return;
+                    }
                 }
 
-                // Decode parameter field:
-                //  Client protocol version (upper)
-                //  Client vendor id (lower)
-                uint16_t *value = (uint16_t *) &msg_header.parameter;
-                uint16_t client_vendor_id = *value;
-                uint16_t client_protocol_version = *(value+1);
-
-                // Check if HiSlip protocol version is supported
-                if (client_protocol_version != SERVER_PROTOCOL_VERSION)
-                {
-                    error_printf("Unsupported protocol version\n");
-                    server->tcp_close(socket);
-                    return;
-                }
-
-                // Create new session
+                // Create new connection session
                 i = session_new();
                 if (i < 0)
                 {
                     error_printf("Could not allocate new session!\n");
                     server->tcp_close(socket);
                     return;
+                }
+
+                // Link connection session with registered subaddress callbacks
+                subaddress = payload;
+                if (server_subaddress_link(server, subaddress, session[i].subaddress_data) == -1)
+                {
+                    error_printf("Unable to link subaddress\n");
+                    // TODO: Respond FatalError
+                    continue;
                 }
 
                 // Send InitializeResponse message including
@@ -196,10 +228,12 @@ int hs_server_run(hs_server_t *server)
     return 0;
 }
 
-// hs_server_register_subaddress(hs_server_t *server, char *subaddress, callbacks);
-
 int hs_server_init(hs_server_t *server, hs_server_config_t *config)
 {
+    // Intialize subaddress list
+    subaddress_head = malloc(sizeof(subaddress_head_t));
+    LIST_INIT(subaddress_head);
+
     // Set configuration
     server->config = config;
 
@@ -214,5 +248,20 @@ int hs_server_init(hs_server_t *server, hs_server_config_t *config)
 
 int hs_server_register_subaddress(hs_server_t *server, char *subaddress, hs_subaddress_callbacks_t *callbacks)
 {
+    // Add subaddres to list of registered subaddresses
+    server->subaddress_data = malloc(sizeof(hs_subaddress_data_t));
+    if (server->subaddress_data == NULL)
+    {
+        error_printf("Could not allocated space for new subaddress\n");
+        return -1;
+    }
+
+    // Install subaddress data
+    server->subaddress_data->callbacks = callbacks;
+    server->subaddress_data->subaddress = subaddress;
+
+    // Insert at list head
+    LIST_INSERT_HEAD(subaddress_head, server->subaddress_data, entries);
+
     return 0;
 }

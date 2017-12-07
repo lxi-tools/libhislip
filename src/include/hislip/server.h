@@ -31,6 +31,8 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+#include <sys/queue.h>
+
 typedef struct
 {
     int (*message_sync)(void *buffer, int length);
@@ -38,10 +40,11 @@ typedef struct
 
 } hs_subaddress_callbacks_t;
 
-typedef struct
+typedef struct hs_subaddress_data_t
 {
     char *subaddress;
-    hs_subaddress_callbacks_t callbacks;
+    hs_subaddress_callbacks_t *callbacks;
+    LIST_ENTRY(hs_subaddress_data_t) entries;
 
 } hs_subaddress_data_t;
 
@@ -64,7 +67,7 @@ typedef struct
     int (*tcp_close)(int socket);
 
     hs_server_config_t *config;
-    hs_subaddress_data_t subaddress_data[20];
+    hs_subaddress_data_t *subaddress_data;
 
 } hs_server_t;
 
