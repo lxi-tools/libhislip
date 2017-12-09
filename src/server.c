@@ -273,7 +273,7 @@ int hs_server_register_subaddress(hs_server_t *server, char *subaddress, hs_suba
     server->subaddress_data->callbacks = callbacks;
     server->subaddress_data->subaddress = subaddress;
 
-    // Insert at list head
+    // Add to list
     LIST_INSERT_HEAD(subaddress_head, server->subaddress_data, entries);
 
     return 0;

@@ -31,3 +31,5 @@ src/include/stamp-h1
 /config.sub
 /libtool
 /m4
+test/server
+test/client

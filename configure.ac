@@ -34,4 +34,5 @@ AC_CHECK_HEADERS(sys/socket.h, [], [AC_ERROR([Required socket headers not found]
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([src/Makefile])
 AC_CONFIG_FILES([man/Makefile])
+AC_CONFIG_FILES([test/Makefile])
 AC_OUTPUT
