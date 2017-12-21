@@ -37,7 +37,7 @@
 #include <string.h>
 
 #define MSG_HEADER_SIZE 16
-#define MSG_HEADER_PROLOGUE 0x4854 // "HS"
+#define MSG_HEADER_PROLOGUE 0x4853 // "HS"
 
 typedef struct __attribute__((__packed__))
 {
