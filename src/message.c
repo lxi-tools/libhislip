@@ -29,6 +29,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -43,6 +44,64 @@ int msg_header_verify(msg_header_t *header)
         error_printf("Received invalid message header (invalid prologue)\n");
         return 1;
     }
+
+    return 0;
+}
+
+int msg_create(
+        void **message,
+        msg_type_t type,
+        uint8_t control_code,
+        uint32_t parameter,
+        uint64_t payload_length,
+        void *payload)
+{
+    msg_header_t *header;
+    char *payload_p;
+
+    // Allocate memory for message buffer
+    *message = malloc(sizeof(msg_header_t) + payload_length);
+    if (*message == NULL)
+    {
+        error_printf("Failed to allocate memory for messaage\n");
+        return -1;
+    }
+
+    // Create message header
+    header = *message;
+    header->prologue = MSG_HEADER_PROLOGUE;
+    header->type = type;
+    header->control_code = control_code;
+    header->parameter = parameter;
+    header->payload_length = payload_length;
+
+    // Copy payload if any
+    if (payload_length > 0)
+    {
+        payload_p = *message;
+        memcpy(payload_p + sizeof(msg_header_t), payload, payload_length);
+    }
+
+    return 0;
+}
+
+void msg_destroy(void *message)
+{
+    free(message);
+}
+
+int msg_receive(void *message, int *length)
+{
+    // Receive header
+
+    // Receive payload
+
+    return 0;
+}
+
+int msg_send(void *message, int length)
+{
+    // Send message
 
     return 0;
 }

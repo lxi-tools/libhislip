@@ -111,7 +111,9 @@ static void hs_process(int socket, hs_server_t *server)
         {
             // Invalid header
             error_printf("Invalid header\n");
+
             // Send FatalError message with error code 1 (Poorly formed message header)
+            //msg_send(FatalError, 1, 0, error_string(1), error_string_length(1));
 
             continue; // Skip until valid header received
         }
@@ -223,6 +225,7 @@ static void connection_callback(int socket, void *data)
 int hs_server_run(hs_server_t *server)
 {
     // Start server
+    printf("Starting HiSlip server\n");
     server->tcp_start(server->config->port, server->config->connections_max, connection_callback, server);
 
     return 0;

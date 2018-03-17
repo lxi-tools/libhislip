@@ -44,10 +44,15 @@
 #include "tcp.h"
 #include "session.h"
 #include "error.h"
+#include "message.h"
 
 hs_client_t hs_connect(char *address, int port, char *subaddress, int timeout)
 {
     int sd, i;
+    void *message = NULL;
+    uint16_t version = (HISLIP_VERSION_MAJOR << 8) + HISLIP_VERSION_MINOR;
+    uint32_t parameter = (version << 16) + HISLIP_VENDOR_ID;
+    ssize_t length;
 
     // Create new session
     i = session_new();
@@ -65,8 +70,10 @@ hs_client_t hs_connect(char *address, int port, char *subaddress, int timeout)
     session[i].socket_sync = sd;
 
     // Create Initialize message
+    length = msg_create(message, Initialize, 0, parameter, strlen(subaddress), subaddress);
 
     // send Initialize message
+    tcp_write(sd, message, length, timeout);
 
     // Wait for InitializeResponse message
 

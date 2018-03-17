@@ -32,5 +32,8 @@
 #define COMMON_H
 
 #define HISLIP_PORT 4880
+#define HISLIP_VERSION_MAJOR 1
+#define HISLIP_VERSION_MINOR 0
+#define HISLIP_VENDOR_ID 42
 
 #endif

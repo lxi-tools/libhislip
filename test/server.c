@@ -17,7 +17,6 @@ int hislip0_message_async(void *buffer, int length)
 int main(void)
 {
     int status;
-
     hs_server_t server;
     hs_server_config_t config;
     hs_subaddress_callbacks_t hislip0_callbacks;
@@ -35,7 +34,7 @@ int main(void)
     // Initialize server
     hs_server_init(&server, &config);
     
-    // Register HiSlip message handlers
+    // Register server message handlers
     hislip0_callbacks.message_sync = hislip0_message_sync;
     hislip0_callbacks.message_async = hislip0_message_async;
     hs_server_register_subaddress(&server, "hislip0", &hislip0_callbacks);
